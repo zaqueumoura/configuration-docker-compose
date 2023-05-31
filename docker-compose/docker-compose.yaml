@@ -1,0 +1,59 @@
+version: "3"
+services:
+  api-gateway:
+    build:
+      context: ../Gateway-Project/
+      dockerfile: Dockerfile
+#    container_name: api-gateway
+    depends_on:
+      - mysql-api
+    deploy:
+      mode: replicated
+      replicas: 2
+#    ports:
+#      - "8180:8180"
+    env_file:
+      - "./envs/api-gateway.env"
+    networks:
+      - api-microservices
+
+  api-user:
+    build:
+      context: ../User-Project/
+      dockerfile: Dockerfile
+#    container_name: api-gateway
+    depends_on:
+      - mysql-api
+      - redis-api
+    deploy:
+      mode: replicated
+      replicas: 2
+#    ports:
+#      - "8181:8181"
+    env_file:
+      - "./envs/api-user.env"
+    networks:
+      - api-microservices
+
+  mysql-api:
+    image: mysql
+    container_name: mysql-api
+    env_file:
+      - "./envs/Mysql.env"
+    networks:
+      api-microservices:
+        ipv4_address: 10.18.0.10
+
+  redis-api:
+    image: redis:6
+    container_name: redis-api
+    networks:
+      api-microservices:
+        ipv4_address: 10.18.0.11
+
+networks:
+  api-microservices:
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.18.0.0/24
